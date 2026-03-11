@@ -26,6 +26,15 @@ class DeviceConnector:
         except Exception as e:
             raise DeviceConnectionError(f"Failed to connect to {address}: {e}")
 
+    def connect_usb(self) -> u2.Device:
+        """通过 USB 连接到设备"""
+        try:
+            self._device = u2.connect_usb()
+            self._address = "usb"
+            return self._device
+        except Exception as e:
+            raise DeviceConnectionError(f"Failed to connect via USB: {e}")
+
     def disconnect(self):
         """断开连接"""
         self._device = None
