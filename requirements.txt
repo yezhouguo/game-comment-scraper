@@ -1,0 +1,7 @@
+uiautomator2==2.16.25
+pillow==10.3.0
+sqlalchemy==2.0.35
+python-dateutil==2.9.0
+pytest==8.3.4
+pytest-asyncio==0.24.0
+pytest-cov==6.0.0
