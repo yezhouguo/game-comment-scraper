@@ -69,8 +69,8 @@ game-comment-scraper/
 |---------|------|------|
 | 华为 | ✅ 完成 | 增强版适配器 + 单元测试 + 集成测试 |
 | OPPO | ✅ 完成 | 完整适配器 + 测试验证 |
+| VIVO | ✅ 完成 | 完整适配器 + 自动展开长评论 + 测试验证 |
 | 小米 | ⏳ 待实现 | 框架已搭建 |
-| VIVO | ⏳ 待实现 | 框架已搭建 |
 
 ### Phase 5: 数据导出 ✅
 - [x] Excel 格式导出
@@ -180,6 +180,61 @@ comments = adapter.scrape_game_comments("王者荣耀", "com.tencent.tmgp.sgame"
 
 ---
 
+## VIVO应用商店适配器
+
+### 核心类
+```python
+from src.adapters.vivo import VivoAppStoreAdapter, VivoScrapeConfig
+
+adapter = VivoAppStoreAdapter(device)
+config = VivoScrapeConfig(
+    max_count=200,
+    max_days=2,
+    max_scrolls=100,
+    progress_interval=5
+)
+comments = adapter.scrape_game_comments("王者荣耀", "com.tencent.tmgp.sgame", config)
+```
+
+### 包名
+`com.bbk.appstore` (注意：不是 com.vivo.appstore)
+
+### 导航流程
+1. Market 协议跳转: `market://details?id={package_name}`
+2. 点击"查看应用详情"进入详情页
+3. 点击"评分及评论"进入评论页
+4. 滚动加载: `swipe(0.5, 0.75, 0.5, 0.25, duration=0.3)`
+
+### 元素定位
+| 元素 | resource-id |
+|------|-------------|
+| 用户ID | `com.bbk.appstore:id/comment_user` |
+| 评论内容 | `com.bbk.appstore:id/expand_content_tv` |
+| 评论时间 | `com.bbk.appstore:id/time` |
+| 点赞数 | `com.bbk.appstore:id/comment_like_count` |
+| 展开按钮 | `com.bbk.appstore:id/expand_tv` |
+
+### 时间格式解析
+| 格式 | 示例 | 解析结果 |
+|------|------|----------|
+| YYYY-MM-DD | `2026-03-11` | 计算天数差 |
+| HH:MM | `01:51` | 今天 (0天前) |
+
+### 特殊功能
+- **自动展开长评论**: 自动点击"展开"按钮获取完整评论内容
+- **点赞数采集**: 支持采集评论点赞数
+
+### 测试结果 (2026-03-11)
+- ✅ 30条测试: 97秒
+- ✅ 长评论展开功能正常（最长325字符）
+- ✅ 点赞数采集正常
+
+### 采集速度
+- 约3.2秒/条评论
+- 1000条约需50-55分钟
+
+---
+
 ## 脚本使用说明
 
 ### 华为应用市场
@@ -200,13 +255,24 @@ python scripts/adapter_scrape.py 200 --days 2
 python scripts/test_oppo.py
 ```
 
+### VIVO应用商店
+```bash
+# 测试模式 (10条)
+python scripts/test_vivo.py
+
+# 采集指定数量
+python scripts/test_vivo.py 50
+
+# 采集指定天数内的评论
+python scripts/test_vivo.py 100 --days 1
+```
+
 ---
 
 ## 下一步计划
 
 ### 短期 (1-2天)
 1. ⏳ 实现小米应用商店适配器
-2. ⏳ 实现VIVO应用商店适配器
 
 ### 中期 (3-7天)
 1. ⏳ 统一采集脚本
@@ -222,7 +288,6 @@ python scripts/test_oppo.py
 ## 待办事项
 
 - [ ] 实现小米应用商店适配器
-- [ ] 实现VIVO应用商店适配器
 - [ ] 统一采集脚本入口
 - [ ] 添加更多测试游戏
 - [ ] 添加日志记录
@@ -231,6 +296,7 @@ python scripts/test_oppo.py
 ### 已完成
 - [x] 华为适配器 + 单元测试 + 集成测试
 - [x] OPPO适配器 + 功能测试
+- [x] VIVO适配器 + 功能测试 + 自动展开长评论
 - [x] 数据导出为 Excel
 - [x] 时间解析与筛选
 - [x] 去重机制
@@ -249,6 +315,7 @@ pandas
 ---
 
 **最后更新**: 2026-03-11
-**当前版本**: 0.4.0
+**当前版本**: 0.5.0
 **华为适配器**: ✅ 生产就绪
 **OPPO适配器**: ✅ 生产就绪
+**VIVO适配器**: ✅ 生产就绪
